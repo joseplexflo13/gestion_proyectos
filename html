@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAPA DE PROCESOS CON AVANCE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: center;
+        }
+
+        .main-layout-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 1600px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .top-row {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .strategic-column { flex: 1 1 15%; }
+        .main-column { flex: 1 1 85%; }
+        .support-section { width: 100%; }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #343a40;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .process-map {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .base-step {
+            padding: 8px 10px;
+            border-radius: 6px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 10px;
+            white-space: normal;
+            border: 1px solid;
+            text-transform: uppercase;
+            min-width: 80px;
+            min-height: 40px;
+            flex: 1;
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .base-step:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+
+        .step-strategic-color { background-color: #003366; color: #ffffff; border-color: #002244; }
+        .step-principal-container-color { background-color: #0056b3; color: #ffffff; border-color: #004085; }
+        .step-quality-color { background-color: #6c757d; color: #ffffff; border-color: #5a6268; }
+        .step-support-color { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; font-weight: normal; }
+        .step-default-color { background-color: #e9ecef; color: #495057; border-color: #ced4da; }
+        .sub-step-color { background-color: #d4edda; color: #1a472a; border-color: #c3e6cb; }
+
+        .sub-step { min-width: 50px; padding: 4px 8px; font-size: 9px; margin: 2px; border: 1px solid rgba(0,0,0,0.1); flex: 1; position: relative; box-sizing: border-box; box-shadow: none; }
+        .sub-step:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .sub-step-long-label { min-width: 100px; padding: 6px 10px; font-size: 9px; }
+        .base-step-long-label { min-width: 120px; padding: 6px 10px; font-size: 9px; }
+
+        .step-container-general { min-width: 150px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; flex: 1; position: relative; box-sizing: border-box; overflow: hidden; }
+        .step-container-general .container-title { font-size: 11px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #ffffff; z-index: 1; }
+        .step-container-general .sub-steps-wrapper { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: 100%; z-index: 1; }
+
+        #planeamiento .sub-steps-wrapper { flex-direction: column; align-items: stretch; gap: 6px; }
+
+        .arrow { font-size: 20px; color: #6c757d; margin: 0 8px; flex-shrink: 0; }
+        .process-section-box { background-color: #ffffff; border: 1px dashed #adb5bd; border-radius: 10px; padding: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); width: 100%; box-sizing: border-box; }
+
+        .main-flow-container { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+        .main-flow-row { display: flex; flex-direction: row; align-items: stretch; gap: 8px; width: 100%; }
+        .main-flow-row .arrow { display: flex; align-items: center; }
+        .main-flow-row > .base-step { flex: 1 1 15%; } 
+        .main-flow-row > .step-container-general { flex: 1 1 60%; } 
+        .vertical-connector { width: 3px; height: 20px; background-color: #adb5bd; margin: auto; }
+
+        .progress-bar-container { width: calc(100% - 16px); height: 6px; background-color: rgba(255, 255, 255, 0.3); border-radius: 3px; margin-top: 5px; overflow: hidden; position: relative; }
+        .progress-bar-fill { height: 100%; background-color: #28a745; border-radius: 3px; transition: width 0.5s ease-in-out; }
+        .progress-percentage { font-size: 9px; font-weight: bold; color: inherit; margin-top: 2px; display: block; white-space: nowrap; }
+        .category-progress-percentage { font-size: 14px; font-weight: bold; margin-left: 8px; color: #007bff; }
+        .base-step > span:first-child:not(.progress-percentage), .step-container-general .container-title { flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+
+        .strategic-column .process-map { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+        .strategic-column .base-step { flex-grow: 0; width: 100%; min-height: 30px; padding-top: 6px; padding-bottom: 6px; font-size: 9px; }
+        .strategic-column .progress-bar-container { height: 5px; margin-top: 4px; }
+        .strategic-column .progress-percentage { font-size: 8px; margin-top: 1px; }
+        .strategic-column #planeamiento .container-title { font-size: 10px; }
+
+        #summary-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .summary-left-col { font-size: 18px; font-weight: bold; padding-right: 20px; border-right: 1px solid #eee; }
+        .summary-right-col { font-size: 14px; line-height: 1.6; }
+
+        @media (max-width: 992px) {
+            .top-row { flex-direction: column; }
+            .strategic-column, .main-column { width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .main-flow-row { flex-direction: column; align-items: stretch; }
+            .main-flow-row .arrow { margin: 8px auto; transform: rotate(90deg); }
+            .base-step, .sub-step, .base-step-long-label, .sub-step-long-label { font-size: 9px; min-height: 30px; }
+            .section-title { font-size: 14px; }
+            .step-container-general .container-title { font-size: 10px; }
+            .progress-bar-container { width: calc(100% - 10px); }
+            #summary-box { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-layout-container">
+    <div class="top-row">
+        <!-- COLUMNA ESTRATÉGICA -->
+        <div class="process-section-box strategic-column">
+            <div class="section-title">PROCESOS ESTRATEGICOS <span class="category-progress-percentage" id="strategicCategoryPercentage"></span></div>
+            <div class="process-map">
+                <a href="#" target="_blank" class="base-step step-strategic-color" id="altaDireccion">
+                    <span>ALTA DIRECCION</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill" id="altaDireccionFill"></div></div>
+                    <span class="progress-percentage" id="altaDireccionPercentage"></span>
+                </a>
+                <a href="#" target="_blank" class="base-step step-strategic-color" id="sostenibilidad">
+                    <span>SOSTENIBILIDAD</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill" id="sostenibilidadFill"></div></div>
+                    <span class="progress-percentage" id="sostenibilidadPercentage"></span>
+                </a>
+                <div class="base-step step-container-general step-strategic-color" id="planeamiento">
+                    <span class="container-title">PLANEAMIENTO</span>
+                    <div class="sub-steps-wrapper">
+                        <a href="#" target="_blank" class="base-step sub-step sub-step-color" id="pcpTextil">
+                            <span>PCP TEXTIL</span>
+                            <div class="progress-bar-container"><div class="progress-bar-fill" id="pcpTextilFill"></div></div>
+                            <span class="progress-percentage" id="pcpTextilPercentage"></span>
+                        </a>
+                        <a href="#" target="_blank" class="base-step sub-step sub-step-color" id="pcpConfecciones">
+                            <span>PCP CONFECCIONES</span>
+                            <div class="progress-bar-container"><div class="progress-bar-fill" id="pcpConfeccionesFill"></div></div>
+                            <span class="progress-percentage" id="pcpConfeccionesPercentage"></span>
+                        </a>
+                    </div>
+                    <div class="progress-bar-container" style="margin-top: 10px;"><div class="progress-bar-fill" id="planeamientoFill"></div></div>
+                    <span class="progress-percentage" id="planeamientoPercentage"></span>
+                </div>
+                <a href="#" target="_blank" class="base-step step-strategic-color" id="comercial">
+                    <span>COMERCIAL</span>
+                    <div class="progress-bar-container"><div class="progress-bar-fill" id="comercialFill"></div></div>
+                    <span class="progress-percentage" id="comercialPercentage"></span>
+                </a>
+            </div>
+        </div>
+
+        <!-- COLUMNA PRINCIPAL -->
+        <div class="process-section-box main-column">
+            <div class="section-title">PROCESOS PRINCIPALES <span class="category-progress-percentage" id="principalesCategoryPercentage"></span></div>
+            <div class="process-map">
+                <div class="main-flow-container">
+                    <div class="main-flow-row">
+                        <a href="#" target="_blank" class="base-step step-strategic-color" id="desarrolloTextil">
+                            <span>DESARROLLO TEXTIL</span>
+                            <div class="progress-bar-container"><div class="progress-bar-fill" id="desarrolloTextilFill"></div></div>
+                            <span class="progress-percentage" id="desarrolloTextilPercentage"></span>
+                        </a>
+                        <span class="arrow">&rarr;</span>
+                        <div class="base-step step-container-general step-principal-container-color" id="pTextiles">
+                            <span class="container-title">TEXTIL</span>
+                            <div class="sub-steps-wrapper">
+                                <a href="#" target="_blank" class="base-step step-default-color" id="hilanderia"><span>HILANDERIA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="hilanderiaFill"></div></div><span class="progress-percentage" id="hilanderiaPercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="tejeduria"><span>TEJEDURIA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="tejeduriaFill"></div></div><span class="progress-percentage" id="tejeduriaPercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="tintoreria"><span>TINTORERIA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="tintoreriaFill"></div></div><span class="progress-percentage" id="tintoreriaPercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="lavanderia"><span>LAVANDERIA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="lavanderiaFill"></div></div><span class="progress-percentage" id="lavanderiaPercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="estampado"><span>ESTAMPADO</span><div class="progress-bar-container"><div class="progress-bar-fill" id="estampadoFill"></div></div><span class="progress-percentage" id="estampadoPercentage"></span></a>
+                            </div>
+                            <div class="progress-bar-container" style="margin-top: 10px;"><div class="progress-bar-fill" id="pTextilesFill"></div></div>
+                            <span class="progress-percentage" id="pTextilesPercentage"></span>
+                        </div>
+                        <span class="arrow">&rarr;</span>
+                        <a href="#" target="_blank" class="base-step step-quality-color" id="asgCalidadTextil">
+                            <span>ASG. CALIDAD TEXTIL</span>
+                            <div class="progress-bar-container"><div class="progress-bar-fill" id="asgCalidadTextilFill"></div></div>
+                            <span class="progress-percentage" id="asgCalidadTextilPercentage"></span>
+                        </a>
+                    </div>
+                    <div class="vertical-connector"></div>
+                    <div class="main-flow-row">
+                        <a href="#" target="_blank" class="base-step step-strategic-color" id="desarrolloConfecciones">
+                            <span>DESARROLLO CONFECCIONES</span>
+                            <div class="progress-bar-container"><div class="progress-bar-fill" id="desarrolloConfeccionesFill"></div></div>
+                            <span class="progress-percentage" id="desarrolloConfeccionesPercentage"></span>
+                        </a>
+                        <span class="arrow">&rarr;</span>
+                        <div class="base-step step-container-general step-principal-container-color" id="pManufactura">
+                            <span class="container-title">CONFECCIONES</span>
+                            <div class="sub-steps-wrapper">
+                                <a href="#" target="_blank" class="base-step step-default-color" id="corteHabilitado"><span>CORTE Y HABILITADO</span><div class="progress-bar-container"><div class="progress-bar-fill" id="corteHabilitadoFill"></div></div><span class="progress-percentage" id="corteHabilitadoPercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="costura"><span>COSTURA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="costuraFill"></div></div><span class="progress-percentage" id="costuraPercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="acabadoEmbalaje"><span>ACABADO Y EMBALAJE</span><div class="progress-bar-container"><div class="progress-bar-fill" id="acabadoEmbalajeFill"></div></div><span class="progress-percentage" id="acabadoEmbalajePercentage"></span></a>
+                                <a href="#" target="_blank" class="base-step step-default-color" id="bordado"><span>BORDADO</span><div class="progress-bar-container"><div class="progress-bar-fill" id="bordadoFill"></div></div><span class="progress-percentage" id="bordadoPercentage"></span></a>
+                            </div>
+                            <div class="progress-bar-container" style="margin-top: 10px;"><div class="progress-bar-fill" id="pManufacturaFill"></div></div>
+                            <span class="progress-percentage" id="pManufacturaPercentage"></span>
+                        </div>
+                        <span class="arrow">&rarr;</span>
+                        <a href="#" target="_blank" class="base-step step-quality-color" id="asgCalidadConfecciones">
+                            <span>ASG. CALIDAD CONFECCIONES</span>
+                            <div class="progress-bar-container"><div class="progress-bar-fill" id="asgCalidadConfeccionesFill"></div></div>
+                            <span class="progress-percentage" id="asgCalidadConfeccionesPercentage"></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN INFERIOR: PROCESOS DE SOPORTE -->
+    <div class="process-section-box support-section">
+        <div class="section-title">PROCESOS DE SOPORTE <span class="category-progress-percentage" id="supportCategoryPercentage"></span></div>
+        <div class="process-map">
+            <a href="#" target="_blank" class="base-step step-support-color" id="compras"><span>COMPRAS</span><div class="progress-bar-container"><div class="progress-bar-fill" id="comprasFill"></div></div><span class="progress-percentage" id="comprasPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color base-step-long-label" id="almMateriaPrima"><span>ALM. DE MATERIA PRIMA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="almMateriaPrimaFill"></div></div><span class="progress-percentage" id="almMateriaPrimaPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color" id="almHilos"><span>ALM. DE HILOS</span><div class="progress-bar-container"><div class="progress-bar-fill" id="almHilosFill"></div></div><span class="progress-percentage" id="almHilosPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color base-step-long-label" id="almTelaAcabada"><span>ALM. DE TELA ACABADA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="almTelaAcabadaFill"></div></div><span class="progress-percentage" id="almTelaAcabadaPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color base-step-long-label" id="almDespachoAvios"><span>ALM. Y DESPACHO DE AVIOS</span><div class="progress-bar-container"><div class="progress-bar-fill" id="almDespachoAviosFill"></div></div><span class="progress-percentage" id="almDespachoAviosPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color" id="servicios"><span>SERVICIOS</span><div class="progress-bar-container"><div class="progress-bar-fill" id="serviciosFill"></div></div><span class="progress-percentage" id="serviciosPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color base-step-long-label" id="gestionAdministrativa"><span>GESTION ADMINISTRATIVA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="gestionAdministrativaFill"></div></div><span class="progress-percentage" id="gestionAdministrativaPercentage"></span></a>
+        </div>
+        <div class="process-map">
+            <a href="#" target="_blank" class="base-step step-support-color" id="gestionTi"><span>GESTION DE TI</span><div class="progress-bar-container"><div class="progress-bar-fill" id="gestionTiFill"></div></div><span class="progress-percentage" id="gestionTiPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color" id="mantenimiento"><span>MANTENIMIENTO</span><div class="progress-bar-container"><div class="progress-bar-fill" id="mantenimientoFill"></div></div><span class="progress-percentage" id="mantenimientoPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color base-step-long-label" id="ingTiempoMetodos"><span>ING. TIEMPO Y METODOS</span><div class="progress-bar-container"><div class="progress-bar-fill" id="ingTiempoMetodosFill"></div></div><span class="progress-percentage" id="ingTiempoMetodosPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color" id="labTintoreria"><span>LAB. DE TINTORERIA</span><div class="progress-bar-container"><div class="progress-bar-fill" id="labTintoreriaFill"></div></div><span class="progress-percentage" id="labTintoreriaPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color" id="gestionRrhh"><span>GESTION DE RRHH</span><div class="progress-bar-container"><div class="progress-bar-fill" id="gestionRrhhFill"></div></div><span class="progress-percentage" id="gestionRrhhPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color" id="ptari"><span>PTARI</span><div class="progress-bar-container"><div class="progress-bar-fill" id="ptariFill"></div></div><span class="progress-percentage" id="ptariPercentage"></span></a>
+            <a href="#" target="_blank" class="base-step step-support-color base-step-long-label" id="gestionSeguridad"><span>GESTION DE LA SEGURIDAD</span><div class="progress-bar-container"><div class="progress-bar-fill" id="gestionSeguridadFill"></div></div><span class="progress-percentage" id="gestionSeguridadPercentage"></span></a>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen flotante -->
+<div id="summary-box">
+    <div class="summary-left-col">
+        <div id="summary-total">Total 0</div>
+    </div>
+    <div class="summary-right-col">
+        <div id="summary-terminado">Terminado 0% [0]</div>
+        <div id="summary-en-proceso">En proceso 0% [0]</div>
+        <div id="summary-estacionamiento">Estacionamiento 0% [0]</div>
+    </div>
+</div>
+
+<script>
+/* ========= CONFIG DE TU GOOGLE SHEET ========= */
+const SHEET_ID   = '1Mxxfuk4f0SHi_QWzpz23ZlC064LVk-Jd_r21aIJUFw8'; // <-- tu ID
+const SHEET_NAME = 'Bd'; // <-- nombre de pestaña
+
+document.addEventListener('DOMContentLoaded', () => {
+    const mapStructure = {
+        planeamiento: ['pcpTextil', 'pcpConfecciones'],
+        pTextiles: ['hilanderia', 'tejeduria', 'tintoreria', 'lavanderia', 'estampado'],
+        pManufactura: ['corteHabilitado', 'bordado', 'costura', 'acabadoEmbalaje'],
+        strategicCategory: ['altaDireccion', 'sostenibilidad', 'planeamiento', 'comercial'],
+        principalesCategory: ['desarrolloTextil', 'pTextiles', 'asgCalidadTextil', 'desarrolloConfecciones', 'pManufactura', 'asgCalidadConfecciones'],
+        supportCategory: ['compras','almMateriaPrima','almHilos','almTelaAcabada','almDespachoAvios','servicios','gestionAdministrativa','gestionTi','mantenimiento','ingTiempoMetodos','labTintoreria','gestionRrhh','ptari','gestionSeguridad']
+    };
+    const areaNameToIdMap = {
+        'ALTA DIRECCION':'altaDireccion','SOSTENIBILIDAD':'sostenibilidad','PLANEAMIENTO':'planeamiento',
+        'PCP TEXTIL':'pcpTextil','PCP CONFECCIONES':'pcpConfecciones','COMERCIAL':'comercial',
+        'DESARROLLO TEXTIL':'desarrolloTextil','TEXTIL':'pTextiles','HILANDERIA':'hilanderia',
+        'TEJEDURIA':'tejeduria','TINTORERIA':'tintoreria','LAVANDERIA':'lavanderia','ESTAMPADO':'estampado',
+        'ASG. CALIDAD TEXTIL':'asgCalidadTextil','DESARROLLO CONFECCIONES':'desarrolloConfecciones',
+        'CONFECCIONES':'pManufactura','CORTE Y HABILITADO':'corteHabilitado','COSTURA':'costura',
+        'ACABADO Y EMBALAJE':'acabadoEmbalaje','BORDADO':'bordado','ASG. CALIDAD CONFECCIONES':'asgCalidadConfecciones',
+        'COMPRAS':'compras','ALM. DE MATERIA PRIMA':'almMateriaPrima','ALM. DE HILOS':'almHilos',
+        'ALM. DE TELA ACABADA':'almTelaAcabada','ALM. Y DESPACHO DE AVIOS':'almDespachoAvios',
+        'SERVICIOS':'servicios','GESTION ADMINISTRATIVA':'gestionAdministrativa','GESTION DE TI':'gestionTi',
+        'MANTENIMIENTO':'mantenimiento','ING. TIEMPO Y METODOS':'ingTiempoMetodos',
+        'LAB. DE TINTORERIA':'labTintoreria','GESTION DE RRHH':'gestionRrhh','PTARI':'ptari',
+        'GESTION DE LA SEGURIDAD':'gestionSeguridad'
+    };
+
+    function updateMapWithData(rows) {
+        const processStats = {};
+        const globalStats = { total: 0, Terminado: 0, "En proceso": 0, "Estacionamiento": 0 };
+        const allIds = new Set(Object.values(areaNameToIdMap));
+
+        allIds.forEach(id => processStats[id] = { total: 0, Terminado: 0, "En proceso": 0, "Estacionamiento": 0 });
+
+        rows.forEach(row => {
+            const rawAreaName = row.AREA ? String(row.AREA).trim().toUpperCase() : undefined;
+            const id = areaNameToIdMap[rawAreaName];
+            const estadoRaw = row.ESTADO ? String(row.ESTADO).trim().toLowerCase() : undefined;
+
+            if (id && processStats[id]) {
+                processStats[id].total++; globalStats.total++;
+                if (estadoRaw === 'terminado') { processStats[id].Terminado++; globalStats.Terminado++; }
+                else if (estadoRaw === 'en proceso') { processStats[id]["En proceso"]++; globalStats["En proceso"]++; }
+                else if (estadoRaw === 'estacionamiento') { processStats[id]["Estacionamiento"]++; globalStats["Estacionamiento"]++; }
+            }
+        });
+
+        for (const id in processStats) {
+            const s = processStats[id];
+            s.percentage = s.total > 0 ? (s.Terminado / s.total) * 100 : 0;
+        }
+
+        function calculateAverage(childrenIds) {
+            let totalProjects = 0, totalFinished = 0;
+            childrenIds.forEach(id => { if (processStats[id]) { totalProjects += processStats[id].total; totalFinished += processStats[id].Terminado; }});
+            return totalProjects > 0 ? (totalFinished / totalProjects) * 100 : 0;
+        }
+        function aggregateChildStats(childrenIds) {
+            const a = { total: 0, Terminado: 0, "En proceso": 0, "Estacionamiento": 0 };
+            childrenIds.forEach(id => {
+                const c = processStats[id]; if(c){ a.total += c.total; a.Terminado += c.Terminado; a["En proceso"] += c["En proceso"]; a["Estacionamiento"] += c["Estacionamiento"]; }
+            });
+            return a;
+        }
+
+        // Agregados de contenedores y categorías
+        const planeamientoStats = aggregateChildStats(mapStructure.planeamiento);
+        processStats.planeamiento = { ...planeamientoStats, percentage: calculateAverage(mapStructure.planeamiento) };
+
+        const pTextilesStats = aggregateChildStats(mapStructure.pTextiles);
+        processStats.pTextiles = { ...pTextilesStats, percentage: calculateAverage(mapStructure.pTextiles) };
+
+        const pManufacturaStats = aggregateChildStats(mapStructure.pManufactura);
+        processStats.pManufactura = { ...pManufacturaStats, percentage: calculateAverage(mapStructure.pManufactura) };
+
+        const strategicCategoryStats = aggregateChildStats(mapStructure.strategicCategory);
+        processStats.strategicCategoryPercentage = { ...strategicCategoryStats, percentage: calculateAverage(mapStructure.strategicCategory) };
+
+        const principalesCategoryStats = aggregateChildStats(mapStructure.principalesCategory);
+        processStats.principalesCategoryPercentage = { ...principalesCategoryStats, percentage: calculateAverage(mapStructure.principalesCategory) };
+
+        const supportCategoryStats = aggregateChildStats(mapStructure.supportCategory);
+        processStats.supportCategoryPercentage = { ...supportCategoryStats, percentage: calculateAverage(mapStructure.supportCategory) };
+
+        updateSummaryBox(globalStats);
+
+        function updateElementUI(id, stats) {
+            const rounded = Math.round(stats.percentage || 0);
+            const totalProjects = stats.total || 0;
+            const finished = stats.Terminado || 0;
+
+            if (id.includes('CategoryPercentage')) {
+                const catEl = document.getElementById(id);
+                if (catEl) catEl.textContent = `${rounded}% (${finished}/${totalProjects})`;
+                return;
+            }
+            const element = document.getElementById(id);
+            if (!element) return;
+
+            const fillEl = document.getElementById(id + 'Fill');
+            const percentEl = document.getElementById(id + 'Percentage');
+
+            if (fillEl) fillEl.style.width = rounded + '%';
+            if (percentEl) percentEl.textContent = `${rounded}% (${finished}/${totalProjects})`;
+
+            const titleSpan = element.querySelector('span:first-child');
+            if (!titleSpan) return;
+
+            const areaName = titleSpan.textContent;
+            let tooltipText = `${areaName} (${rounded}%)\n`;
+            if (stats.total > 0) {
+                tooltipText += `En proceso: ${stats["En proceso"]}\nEstacionamiento: ${stats["Estacionamiento"]}\nTerminado: ${stats.Terminado}`;
+            } else {
+                tooltipText += `0 proyectos`;
+            }
+            element.setAttribute('title', tooltipText);
+        }
+
+        for (const id in processStats) updateElementUI(id, processStats[id]);
+    }
+
+    function updateSummaryBox(stats) {
+        const total = stats.total;
+        const t = total ? Math.round((stats.Terminado / total) * 100) : 0;
+        const p = total ? Math.round((stats["En proceso"] / total) * 100) : 0;
+        const e = total ? Math.round((stats.Estacionamiento / total) * 100) : 0;
+
+        document.getElementById('summary-total').textContent = `Total ${total}`;
+        document.getElementById('summary-terminado').textContent = `Terminado ${t}% [${stats.Terminado}]`;
+        document.getElementById('summary-en-proceso').textContent = `En proceso ${p}% [${stats["En proceso"]}]`;
+        document.getElementById('summary-estacionamiento').textContent = `Estacionamiento ${e}% [${stats.Estacionamiento}]`;
+    }
+
+    /* ======= Carga automática desde Google Sheets vía JSONP (sin CORS) ======= */
+    function gvizToObjects(resp) {
+        if (!resp || !resp.table) return [];
+        const cols = (resp.table.cols || []).map(c => String(c.label || c.id || '').trim().toUpperCase());
+        return (resp.table.rows || []).map(r => {
+            const o = {};
+            cols.forEach((h, i) => {
+                const cell = r.c && r.c[i] ? r.c[i] : null;
+                o[h] = cell && (cell.v !== null && cell.v !== undefined) ? cell.v : '';
+            });
+            return o;
+        });
+    }
+
+    function loadSheetJSONP(sheetId, sheetName) {
+        return new Promise((resolve, reject) => {
+            const cbName = 'GVIZ_CB_' + Math.random().toString(36).slice(2);
+            window[cbName] = function (resp) {
+                try { resolve(gvizToObjects(resp)); }
+                catch (e) { reject(e); }
+                finally {
+                    delete window[cbName];
+                    if (script && script.parentNode) script.parentNode.removeChild(script);
+                }
+            };
+            const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq`;
+            const url  = `${base}?sheet=${encodeURIComponent(sheetName)}&headers=1&tq=${encodeURIComponent('select *')}&tqx=out:json;responseHandler:${cbName}`;
+            const script = document.createElement('script');
+            script.src = url;
+            script.onerror = () => reject(new Error('No se pudo cargar la hoja (revisa permisos y nombre de pestaña).'));
+            document.head.appendChild(script);
+        });
+    }
+
+    loadSheetJSONP(SHEET_ID, SHEET_NAME)
+        .then(rows => {
+            if (!Array.isArray(rows) || rows.length === 0) {
+                alert('La hoja está vacía o no devolvió datos. Verifica que la pestaña tenga filas y encabezados.');
+                return;
+            }
+            updateMapWithData(rows);
+        })
+        .catch(err => {
+            console.error('[GViz JSONP]', err);
+            alert('No se pudo leer el Google Sheet. Verifica el compartir (Cualquiera con el enlace) y el nombre de la pestaña.');
+        });
+});
+</script>
+
+</body>
+</html>
